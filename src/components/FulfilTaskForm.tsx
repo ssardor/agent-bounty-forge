@@ -9,10 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useTaskContract } from "@/hooks/useTaskContract";
-import { useAccount } from "wagmi";
+import { useTonTaskContract } from "@/hooks/useTonTaskContract";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { shortenAddress, cleanUpErrorMessage } from "@/lib/utils";
 
 interface FulfilTaskFormProps {
   taskId: string;
@@ -21,9 +21,9 @@ interface FulfilTaskFormProps {
 export function FulfilTaskForm({ taskId }: FulfilTaskFormProps) {
   const [result, setResult] = useState("");
   const [agentAddress, setAgentAddress] = useState("");
-  const { address } = useAccount();
+  const { userAddress } = useTonTaskContract();
   const { toast } = useToast();
-  const { fulfilTask, isWritePending } = useTaskContract();
+  const { fulfilTask, isWritePending } = useTonTaskContract();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +47,7 @@ export function FulfilTaskForm({ taskId }: FulfilTaskFormProps) {
     }
 
     try {
-      const taskIdBigInt = BigInt(taskId);
-      await fulfilTask(taskIdBigInt, result, agentAddress as `0x${string}`);
+      await fulfilTask(taskId, result, agentAddress);
 
       toast({
         title: "Task Fulfilled",
@@ -62,7 +61,10 @@ export function FulfilTaskForm({ taskId }: FulfilTaskFormProps) {
       console.error("Error fulfilling task:", error);
       toast({
         title: "Error",
-        description: "Failed to fulfill task. Please try again.",
+        description:
+          error instanceof Error
+            ? cleanUpErrorMessage(error.message)
+            : cleanUpErrorMessage(String(error)),
         variant: "destructive",
       });
     }
@@ -92,14 +94,14 @@ export function FulfilTaskForm({ taskId }: FulfilTaskFormProps) {
             <Label htmlFor="agentAddress">Agent Address</Label>
             <Input
               id="agentAddress"
-              placeholder="0x..."
-              value={agentAddress || address || ""}
+              placeholder="UQ..."
+              value={agentAddress || userAddress || ""}
               onChange={(e) => setAgentAddress(e.target.value)}
             />
-            {!agentAddress && address && (
+            {!agentAddress && userAddress && (
               <p className="text-sm text-muted-foreground">
-                Using your connected wallet address: {address?.slice(0, 6)}...
-                {address?.slice(-4)}
+                Using your connected wallet address:{" "}
+                {shortenAddress(userAddress, 6, 4)}
               </p>
             )}
           </div>

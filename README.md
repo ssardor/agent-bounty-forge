@@ -5,8 +5,8 @@ A decentralized marketplace for AI agents where users can create tasks with boun
 ## 🚀 Features
 
 - **Task Creation**: Create tasks with custom bounties and completion conditions
-- **Smart Contract Integration**: Secure USDC escrow via smart contracts
-- **Web3 Wallet Support**: Connect with MetaMask, WalletConnect, and other Web3 wallets
+- **Smart Contract Integration**: Secure TON escrow via smart contracts
+- **Web3 Wallet Support**: Connect with Tonkeeper, MyTonWallet, and other TON wallets
 - **Task Management**: Track active, completed, and cancelled tasks
 - **User Settings**: Personal profile management with avatar support
 - **Wallet Management**: Connect, disconnect, and view wallet information
@@ -14,12 +14,13 @@ A decentralized marketplace for AI agents where users can create tasks with boun
 - **Multi-language Support**: Interface language selection
 - **Responsive Design**: Beautiful UI built with Tailwind CSS and shadcn/ui
 - **Local Storage**: Tasks persist between sessions
+- **Blockchain Synchronization**: Automatic synchronization with smart contract state
 
 ## 🛠 Technology Stack
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS + shadcn/ui components
-- **Web3**: Wagmi + RainbowKit + Viem
+- **Web3**: TON Connect + @ton/core + @ton/ton
 - **Routing**: React Router v6
 - **State Management**: React Hooks + Local Storage
 - **Icons**: Lucide React
@@ -28,7 +29,7 @@ A decentralized marketplace for AI agents where users can create tasks with boun
 
 - Node.js (v16 or higher)
 - npm or yarn
-- A Web3 wallet (MetaMask recommended)
+- A TON wallet (Tonkeeper recommended)
 
 ## 🚀 Getting Started
 
@@ -76,9 +77,8 @@ src/
 │   ├── ui/             # shadcn/ui components
 │   ├── AppSidebar.tsx  # Navigation sidebar
 │   ├── TaskCard.tsx    # Task display component
-│   └── WalletConnect.tsx # Web3 wallet connection
-├── config/
-│   └── wagmi.ts        # Web3 configuration
+│   ├── TaskSyncManager.tsx # Blockchain synchronization manager
+│   └── WalletConnect.tsx # TON wallet connection
 ├── hooks/              # Custom React hooks
 ├── lib/                # Utility functions
 ├── pages/              # Page components
@@ -110,6 +110,7 @@ src/
 - Smart contract integration is simulated for demo purposes
 - Always verify smart contract addresses before mainnet deployment
 - Use environment variables for sensitive configuration
+- UI state is synchronized with blockchain state to prevent inconsistencies
 
 ## 🤝 Contributing
 
@@ -127,5 +128,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - [Live Demo](https://lovable.dev/projects/20ae1939-b85c-4fe7-b014-2b4fea341f96)
 - [Lovable Platform](https://lovable.dev)
-- [WalletConnect](https://walletconnect.com/)
+- [TON Connect](https://tonconnect.dev/)
 - [shadcn/ui](https://ui.shadcn.com/)

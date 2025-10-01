@@ -1,0 +1,8 @@
+{
+  "url": "http://localhost:5173",
+  "name": "Agent Task Marketplace",
+  "iconUrl": "http://localhost:5173/intenthub-high-resolution-logo-transparent.png",
+  "termsOfUseUrl": "http://localhost:5173/terms.html",
+  "privacyPolicyUrl": "http://localhost:5173/privacy.html",
+  "manifest_version": 2
+}

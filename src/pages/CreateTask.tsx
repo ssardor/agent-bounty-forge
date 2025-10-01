@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Send, Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
-import { useTaskContract } from "@/hooks/useTaskContract";
-import { useAccount } from "wagmi";
+import { useTonTaskContract } from "@/hooks/useTonTaskContract";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  shortenAddress,
+  shortenTxHash,
+  cleanUpErrorMessage,
+} from "@/lib/utils";
 
 interface Task {
   id: string;
@@ -47,8 +51,18 @@ export default function CreateTask() {
   const [submissionResult, setSubmissionResult] =
     useState<SubmissionResult | null>(null);
   const { toast } = useToast();
-  const { createTask, isWritePending } = useTaskContract();
-  const { isConnected } = useAccount();
+  const {
+    createTask,
+    isWritePending,
+    isWriteError,
+    isTransactionLoading,
+    isTransactionSuccess,
+    isTransactionError,
+    transactionHash,
+    writeError,
+    transactionError,
+    userAddress,
+  } = useTonTaskContract();
 
   // Load task history from localStorage on component mount
   useEffect(() => {
@@ -79,6 +93,66 @@ export default function CreateTask() {
     }
   };
 
+  // Handle transaction status changes
+  useEffect(() => {
+    if (isTransactionSuccess) {
+      // Transaction was successful, add task to localStorage
+      const newTask: Task = {
+        id: Date.now().toString(), // Simple ID generation
+        description: taskDescription,
+        bounty,
+        conditions,
+        timestamp: new Date(),
+      };
+
+      const updatedHistory = [...taskHistory, newTask];
+      setTaskHistory(updatedHistory);
+      saveTaskHistory(updatedHistory);
+
+      // Show success modal
+      setSubmissionResult({
+        success: true,
+        title: "Task Created Successfully!",
+        description: "Your task has been posted to the marketplace",
+        details: {
+          taskId: newTask.id,
+          bountyAmount: bounty,
+          transactionHash: transactionHash || undefined,
+        },
+      });
+      setShowResultModal(true);
+
+      setTaskDescription("");
+      setBounty("");
+      setConditions("");
+      setIsSubmitting(false);
+    } else if (isTransactionError) {
+      // Transaction failed on-chain
+      setSubmissionResult({
+        success: false,
+        title: "Task Creation Failed",
+        description: "Transaction failed on the blockchain.",
+        error: transactionError?.message
+          ? cleanUpErrorMessage(transactionError.message)
+          : "Unknown blockchain error occurred",
+      });
+      setShowResultModal(true);
+      setIsSubmitting(false);
+    } else if (isWriteError) {
+      // Transaction rejected by user or failed before submission
+      setSubmissionResult({
+        success: false,
+        title: "Task Creation Cancelled",
+        description: "Transaction was rejected or cancelled by the user.",
+        error: writeError?.message
+          ? cleanUpErrorMessage(writeError.message)
+          : "Transaction was rejected by the user",
+      });
+      setShowResultModal(true);
+      setIsSubmitting(false);
+    }
+  }, [isTransactionSuccess, isTransactionError, isWriteError, transactionHash]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,7 +177,7 @@ export default function CreateTask() {
     }
 
     // Check if wallet is connected
-    if (!isConnected) {
+    if (!userAddress) {
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your wallet to create a task",
@@ -116,48 +190,22 @@ export default function CreateTask() {
 
     // Call smart contract to create task
     try {
+      // First, create the task in the contract
       await createTask(taskDescription, bounty, conditions);
-
-      // Add to local history for UI purposes
-      const newTask: Task = {
-        id: Date.now().toString(), // Simple ID generation
-        description: taskDescription,
-        bounty,
-        conditions,
-        timestamp: new Date(),
-      };
-
-      const updatedHistory = [...taskHistory, newTask];
-      setTaskHistory(updatedHistory);
-      saveTaskHistory(updatedHistory);
-
-      // Show success modal
-      setSubmissionResult({
-        success: true,
-        title: "Task Created Successfully!",
-        description: "Your task has been posted to the marketplace",
-        details: {
-          taskId: newTask.id,
-          bountyAmount: bounty,
-        },
-      });
-      setShowResultModal(true);
-
-      setTaskDescription("");
-      setBounty("");
-      setConditions("");
     } catch (error) {
       console.error("Error creating task:", error);
 
-      // Show error modal
+      // Show error modal without adding task to localStorage
       setSubmissionResult({
         success: false,
         title: "Task Creation Failed",
         description: "Failed to create task. Please try again.",
-        error: error instanceof Error ? error.message : String(error),
+        error:
+          error instanceof Error
+            ? cleanUpErrorMessage(error.message)
+            : cleanUpErrorMessage(String(error)),
       });
       setShowResultModal(true);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -198,7 +246,7 @@ export default function CreateTask() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label htmlFor="bounty" className="text-sm font-medium">
-                      Bounty (USDC)
+                      Bounty (USDT)
                     </label>
                     <Input
                       id="bounty"
@@ -226,13 +274,19 @@ export default function CreateTask() {
 
               <Button
                 type="submit"
-                disabled={isSubmitting || isWritePending}
+                disabled={
+                  isSubmitting || isWritePending || isTransactionLoading
+                }
                 className="w-full"
               >
-                {isSubmitting || isWritePending ? (
+                {isSubmitting || isWritePending || isTransactionLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Task...
+                    {isTransactionLoading
+                      ? "Confirming Transaction..."
+                      : isWritePending
+                      ? "Waiting for Wallet..."
+                      : "Creating Task..."}
                   </>
                 ) : (
                   <>
@@ -248,7 +302,7 @@ export default function CreateTask() {
 
       {/* Result Modal */}
       <Dialog open={showResultModal} onOpenChange={closeModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex justify-center mb-4">
               {submissionResult?.success ? (
@@ -266,7 +320,7 @@ export default function CreateTask() {
           </DialogHeader>
 
           {submissionResult && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto flex-grow">
               {submissionResult.success ? (
                 <div className="space-y-3">
                   <div className="rounded-lg bg-green-50 dark:bg-green-950/20 p-4">
@@ -287,9 +341,21 @@ export default function CreateTask() {
                           Bounty Amount:
                         </span>
                         <span className="font-medium">
-                          {submissionResult.details?.bountyAmount} USDC
+                          {submissionResult.details?.bountyAmount} TON
                         </span>
                       </div>
+                      {submissionResult.details?.transactionHash && (
+                        <div className="flex justify-between">
+                          <span className="text-green-700 dark:text-green-300">
+                            Tx Hash:
+                          </span>
+                          <span className="font-mono text-xs">
+                            {shortenTxHash(
+                              submissionResult.details.transactionHash
+                            )}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-green-700 dark:text-green-300">
                           Status:
@@ -314,7 +380,7 @@ export default function CreateTask() {
                         Error Details
                       </h4>
                     </div>
-                    <p className="text-sm text-red-700 dark:text-red-300">
+                    <p className="text-sm text-red-700 dark:text-red-300 break-words whitespace-pre-wrap max-h-32 overflow-y-auto">
                       {submissionResult.error}
                     </p>
                   </div>
@@ -323,7 +389,8 @@ export default function CreateTask() {
                       Possible Causes
                     </h4>
                     <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1 list-disc list-inside">
-                      <li>Insufficient USDC balance</li>
+                      <li>Transaction rejected by user</li>
+                      <li>Insufficient TON balance</li>
                       <li>Network connection issues</li>
                       <li>Smart contract error</li>
                       <li>Gas fee issues</li>
@@ -332,7 +399,7 @@ export default function CreateTask() {
                 </div>
               )}
 
-              <div className="flex justify-center pt-2">
+              <div className="flex justify-center pt-2 mt-auto">
                 <Button onClick={closeModal} className="w-full">
                   {submissionResult.success ? "Continue" : "Try Again"}
                 </Button>

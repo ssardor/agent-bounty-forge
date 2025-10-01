@@ -1,6 +1,6 @@
 import {
   useWriteContract,
-  useReadContract,
+  useWaitForTransactionReceipt,
   useAccount,
   useSwitchChain,
 } from "wagmi";
@@ -19,9 +19,21 @@ export function useTaskContract() {
 
   const {
     writeContract: writeTaskContract,
+    data: writeContractData,
     isPending: isWritePending,
     isError: isWriteError,
+    error: writeError,
   } = useWriteContract();
+
+  // Wait for transaction receipt
+  const {
+    isLoading: isTransactionLoading,
+    isSuccess: isTransactionSuccess,
+    isError: isTransactionError,
+    error: transactionError,
+  } = useWaitForTransactionReceipt({
+    hash: writeContractData,
+  });
 
   // Function to create a new task
   const createTask = async (
@@ -38,13 +50,14 @@ export function useTaskContract() {
           variant: "destructive",
         });
         switchChain({ chainId: 137 });
-        return;
+        return Promise.reject(new Error("Wrong network"));
       }
 
       // Convert bounty amount to proper units (USDC has 6 decimals)
       const bountyInWei = parseUnits(bountyAmount, 6);
 
-      writeTaskContract({
+      // Call the contract
+      const result = await writeTaskContract({
         address: CONTRACT_ADDRESSES.polygon.TaskRegistry,
         abi: ITaskRegistryABI.abi,
         functionName: "createTask",
@@ -52,6 +65,8 @@ export function useTaskContract() {
         account: address,
         chain: null,
       });
+
+      return result;
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
@@ -60,6 +75,7 @@ export function useTaskContract() {
           "Произошла ошибка при создании задачи. Попробуйте еще раз.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -74,10 +90,11 @@ export function useTaskContract() {
           variant: "destructive",
         });
         switchChain({ chainId: 137 });
-        return;
+        return Promise.reject(new Error("Wrong network"));
       }
 
-      writeTaskContract({
+      // Call the contract
+      const result = await writeTaskContract({
         address: CONTRACT_ADDRESSES.polygon.TaskRegistry,
         abi: ITaskRegistryABI.abi,
         functionName: "cancelTask",
@@ -85,6 +102,8 @@ export function useTaskContract() {
         account: address,
         chain: null,
       });
+
+      return result;
     } catch (error) {
       console.error("Error cancelling task:", error);
       toast({
@@ -92,13 +111,14 @@ export function useTaskContract() {
         description: "Произошла ошибка при отмене задачи. Попробуйте еще раз.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
   // Function to fulfil a task
   const fulfilTask = async (
     taskId: bigint,
-    result: string,
+    resultData: string,
     agentAddress: `0x${string}`
   ) => {
     try {
@@ -110,17 +130,20 @@ export function useTaskContract() {
           variant: "destructive",
         });
         switchChain({ chainId: 137 });
-        return;
+        return Promise.reject(new Error("Wrong network"));
       }
 
-      writeTaskContract({
+      // Call the contract
+      const result = await writeTaskContract({
         address: CONTRACT_ADDRESSES.polygon.TaskRegistry,
         abi: ITaskRegistryABI.abi,
         functionName: "fulfilTask",
-        args: [taskId, result, agentAddress],
+        args: [taskId, resultData, agentAddress],
         account: address,
         chain: null,
       });
+
+      return result;
     } catch (error) {
       console.error("Error fulfilling task:", error);
       toast({
@@ -129,6 +152,7 @@ export function useTaskContract() {
           "Произошла ошибка при выполнении задачи. Попробуйте еще раз.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -143,7 +167,7 @@ export function useTaskContract() {
           variant: "destructive",
         });
         switchChain({ chainId: 137 });
-        return;
+        return Promise.reject(new Error("Wrong network"));
       }
 
       // Check if the current user is the verifier
@@ -153,10 +177,11 @@ export function useTaskContract() {
           description: "Только верификатор может завершать задачи",
           variant: "destructive",
         });
-        return;
+        return Promise.reject(new Error("Insufficient permissions"));
       }
 
-      writeTaskContract({
+      // Call the contract
+      const result = await writeTaskContract({
         address: CONTRACT_ADDRESSES.polygon.TaskRegistry,
         abi: ITaskRegistryABI.abi,
         functionName: "completeTask",
@@ -164,6 +189,8 @@ export function useTaskContract() {
         account: address,
         chain: null,
       });
+
+      return result;
     } catch (error) {
       console.error("Error completing task:", error);
       toast({
@@ -172,6 +199,7 @@ export function useTaskContract() {
           "Произошла ошибка при завершении задачи. Попробуйте еще раз.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -182,5 +210,11 @@ export function useTaskContract() {
     completeTask,
     isWritePending,
     isWriteError,
+    isTransactionLoading,
+    isTransactionSuccess,
+    isTransactionError,
+    transactionHash: writeContractData,
+    transactionError,
+    writeError,
   };
 }

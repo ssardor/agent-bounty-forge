@@ -64,7 +64,7 @@ export function TaskCard({
             <h3 className="font-semibold text-lg mb-2">{description}</h3>
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
               <DollarSign className="h-4 w-4" />
-              <span className="font-medium">{bounty} USDC</span>
+              <span className="font-medium">{bounty} USDT</span>
             </div>
           </div>
           {getStatusBadge()}

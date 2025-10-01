@@ -1,4 +1,12 @@
-import { Home, MessageSquarePlus, List, Settings, Bot } from "lucide-react";
+import {
+  Home,
+  MessageSquarePlus,
+  List,
+  Settings,
+  Bot,
+  TestTube,
+  FileText,
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -18,8 +26,10 @@ const items = [
   { title: "Home", url: "/", icon: Home },
   { title: "Create Task", url: "/create", icon: MessageSquarePlus },
   { title: "Manage Tasks", url: "/manage", icon: List },
-  { title: "Agent Tasks", url: "/agent", icon: Bot },
-  { title: "Settings", url: "/settings", icon: Settings },
+  { title: "All Tasks", url: "/agent", icon: Bot },
+ // { title: "Manifest Test", url: "/manifest-test", icon: FileText },
+  // { title: "Settings", url: "/settings", icon: Settings },
+  // { title: "Test Error", url: "/test-error", icon: MessageSquarePlus },
 ];
 
 export function AppSidebar() {

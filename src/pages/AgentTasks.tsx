@@ -116,14 +116,14 @@ export default function AgentTasks() {
                       <CardTitle className="text-lg">
                         {task.description}
                       </CardTitle>
-                      <Badge variant="secondary">{task.bounty} USDC</Badge>
+                      <Badge variant="secondary">{task.bounty} USDT</Badge>
                     </div>
                     <CardDescription>{task.conditions}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <DollarSign className="h-4 w-4" />
-                      <span>Bounty: {task.bounty} USDC</span>
+                      <span>Bounty: {task.bounty} USDT</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -150,7 +150,7 @@ export default function AgentTasks() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label>Bounty</Label>
-                    <p className="font-medium">{selectedTask.bounty} USDC</p>
+                    <p className="font-medium">{selectedTask.bounty} TON</p>
                   </div>
                   <div>
                     <Label>Conditions</Label>

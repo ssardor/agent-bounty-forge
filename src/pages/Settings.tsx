@@ -23,8 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTheme } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useToast } from "@/hooks/use-toast";
-import { useAccount, useDisconnect } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useTonWallet, useTonConnectUI } from "@tonconnect/ui-react";
 import {
   Camera,
   Save,
@@ -37,12 +36,13 @@ import {
   Download,
   Wallet,
 } from "lucide-react";
+import { shortenAddress } from "@/lib/utils";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
-  const { isConnected, address, chain } = useAccount();
-  const { disconnect } = useDisconnect();
+  const wallet = useTonWallet();
+  const [tonConnectUI] = useTonConnectUI();
 
   // Profile state
   const [profile, setProfile] = useState({
@@ -167,28 +167,28 @@ export default function Settings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wallet className="h-5 w-5" />
-            Web3 Кошелек
+            TON Кошелек
           </CardTitle>
           <CardDescription>
-            Управление подключением к блокчейн-кошельку
+            Управление подключением к TON-кошельку
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isConnected ? (
+          {wallet ? (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 space-y-2">
                   <Label>Подключенный кошелек</Label>
                   <div className="flex items-center gap-2">
                     <div className="font-mono text-sm bg-muted px-3 py-2 rounded-md flex-1">
-                      {address?.slice(0, 6)}...{address?.slice(-4)}
+                      {shortenAddress(wallet.account.address, 6, 4)}
                     </div>
-                    {chain && <Badge variant="secondary">{chain.name}</Badge>}
+                    <Badge variant="secondary">{wallet.device.appName}</Badge>
                   </div>
                 </div>
                 <Button
                   variant="destructive"
-                  onClick={() => disconnect()}
+                  onClick={() => tonConnectUI.disconnect()}
                   className="w-full sm:w-auto"
                 >
                   Отключить
@@ -203,15 +203,13 @@ export default function Settings() {
             <div className="space-y-4">
               <div className="text-center py-4">
                 <p className="text-muted-foreground mb-4">
-                  Подключите ваш Web3 кошелек для взаимодействия со
+                  Подключите ваш TON кошелек для взаимодействия со
                   смарт-контрактами
                 </p>
                 <div className="flex justify-center">
-                  <ConnectButton
-                    showBalance={false}
-                    chainStatus="none"
-                    accountStatus={"full"}
-                  />
+                  <Button onClick={() => tonConnectUI.openModal()}>
+                    Подключить кошелек
+                  </Button>
                 </div>
               </div>
             </div>
