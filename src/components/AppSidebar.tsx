@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/components/theme-provider";
 import darkLogo from "@/logo imgs/intenthub-high-resolution-logo-transparent.png";
-import lightLogo from "@/logo imgs/intenthub-high-resolution-logo-grayscale-transparent.png";
+import lightLogo from "@/logo imgs/light-v-logo.png";
 
 const items = [
   { title: "Home", url: "/", icon: Home },

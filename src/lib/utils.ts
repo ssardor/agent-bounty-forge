@@ -11,24 +11,12 @@ export function shortenAddress(
   end: number = 4
 ): string {
   if (!address) return "";
-  // Check for TON address format (starts with EQ, UQ, or kQ)
-  if (
-    (address.startsWith("EQ") ||
-      address.startsWith("UQ") ||
-      address.startsWith("kQ")) &&
-    address.length > start + end
-  ) {
-    return `${address.substring(0, start)}...${address.substring(
-      address.length - end
-    )}`;
+  if (!address.startsWith("0x") || address.length < start + end) {
+    return address || "";
   }
-  // Check for Ethereum address format
-  if (address.startsWith("0x") && address.length >= start + end) {
-    return `${address.substring(0, start)}...${address.substring(
-      address.length - end
-    )}`;
-  }
-  return address || "";
+  return `${address.substring(0, start)}...${address.substring(
+    address.length - end
+  )}`;
 }
 
 export function shortenString(str: string | undefined | null): string {
@@ -41,14 +29,6 @@ export function shortenString(str: string | undefined | null): string {
 
 export function shortenTxHash(hash: string | undefined | null): string {
   if (!hash) return "";
-  // Check for TON hash format
-  if (
-    (hash.startsWith("EQ") || hash.startsWith("UQ") || hash.startsWith("kQ")) &&
-    hash.length > 6
-  ) {
-    return `${hash.substring(0, 3)}...${hash.substring(hash.length - 3)}`;
-  }
-  // Check for Ethereum hash format
   if (hash.startsWith("0x") && hash.length > 6) {
     return `${hash.substring(0, 3)}...${hash.substring(hash.length - 3)}`;
   }
@@ -56,14 +36,10 @@ export function shortenTxHash(hash: string | undefined | null): string {
 }
 
 export function shortenAddressesInError(errorMessage: string): string {
-  // TON address regex (EQ, UQ, or kQ followed by 48 alphanumeric characters)
-  const tonAddressRegex = /[E|U|k]Q[A-Za-z0-9]{48}/g;
-  // Ethereum address regex
-  const ethAddressRegex = /0x[a-fA-F0-9]{40}/g;
-
-  return errorMessage
-    .replace(tonAddressRegex, (match) => shortenAddress(match, 6, 4))
-    .replace(ethAddressRegex, (match) => shortenAddress(match, 6, 4));
+  const addressRegex = /0x[a-fA-F0-9]{40}/g;
+  return errorMessage.replace(addressRegex, (match) => {
+    return shortenAddress(match, 6, 4);
+  });
 }
 
 export function cleanUpErrorMessage(errorMessage: string): string {
