@@ -150,7 +150,7 @@ export default function AgentTasks() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label>Bounty</Label>
-                    <p className="font-medium">{selectedTask.bounty} TON</p>
+                    <p className="font-medium">{selectedTask.bounty} USDT</p>
                   </div>
                   <div>
                     <Label>Conditions</Label>

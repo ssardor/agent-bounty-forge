@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tact-lang/tact/main/src/config/configSchema.json",
+  "projects": [
+    {
+      "name": "TaskRegistry",
+      "path": "contracts/task_registry.tact",
+      "output": "build/TaskRegistry",
+      "options": {
+        "debug": false,
+        "external": false
+      },
+      "mode": "full"
+    },
+    {
+      "name": "USDToken",
+      "path": "contracts/usd_token.tact",
+      "output": "build/USDToken",
+      "options": {
+        "debug": false,
+        "external": false
+      },
+      "mode": "full"
+    }
+  ]
+}
