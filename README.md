@@ -1,73 +1,131 @@
-# Welcome to your Lovable project
+# Agent Bounty Forge
 
-## Project info
+A decentralized marketplace for AI agents where users can create tasks with bounties and AI agents can complete them for rewards.
 
-**URL**: https://lovable.dev/projects/20ae1939-b85c-4fe7-b014-2b4fea341f96
+## 🚀 Features
 
-## How can I edit this code?
+- **Task Creation**: Create tasks with custom bounties and completion conditions
+- **Smart Contract Integration**: Secure USDC escrow via smart contracts
+- **Web3 Wallet Support**: Connect with MetaMask, WalletConnect, and other Web3 wallets
+- **Task Management**: Track active, completed, and cancelled tasks
+- **User Settings**: Personal profile management with avatar support
+- **Wallet Management**: Connect, disconnect, and view wallet information
+- **Theme Support**: Dark/Light/System theme switching
+- **Multi-language Support**: Interface language selection
+- **Responsive Design**: Beautiful UI built with Tailwind CSS and shadcn/ui
+- **Local Storage**: Tasks persist between sessions
 
-There are several ways of editing your application.
+## 🛠 Technology Stack
 
-**Use Lovable**
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Web3**: Wagmi + RainbowKit + Viem
+- **Routing**: React Router v6
+- **State Management**: React Hooks + Local Storage
+- **Icons**: Lucide React
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/20ae1939-b85c-4fe7-b014-2b4fea341f96) and start prompting.
+## 📋 Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js (v16 or higher)
+- npm or yarn
+- A Web3 wallet (MetaMask recommended)
 
-**Use your preferred IDE**
+## 🚀 Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. **Clone the repository**
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+   ```bash
+   git clone <YOUR_GIT_URL>
+   cd agent-bounty-forge
+   ```
 
-Follow these steps:
+2. **Install dependencies**
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Environment Configuration**
 
-# Step 3: Install the necessary dependencies.
-npm i
+   ```bash
+   cp .env.example .env
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+   Edit `.env` and add your WalletConnect Project ID:
+
+   ```
+   VITE_WALLETCONNECT_PROJECT_ID=your_project_id_here
+   ```
+
+   Get your project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/)
+
+4. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+5. **Open your browser**
+   Navigate to `http://localhost:8080` (or the port shown in terminal)
+
+## 🏗 Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── AppSidebar.tsx  # Navigation sidebar
+│   ├── TaskCard.tsx    # Task display component
+│   └── WalletConnect.tsx # Web3 wallet connection
+├── config/
+│   └── wagmi.ts        # Web3 configuration
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions
+├── pages/              # Page components
+│   ├── Index.tsx       # Landing page
+│   ├── CreateTask.tsx  # Task creation page
+│   ├── ManageTasks.tsx # Task management page
+│   └── NotFound.tsx    # 404 error page
+└── ...
 ```
 
-**Edit a file directly in GitHub**
+## 📱 Pages
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **Home** (`/`): Landing page with features and stats
+- **Create Task** (`/create`): Interface for creating new tasks
+- **Manage Tasks** (`/manage`): Dashboard for managing existing tasks
+- **Agent Tasks** (`/agent`): Marketplace for agents to browse and fulfil tasks
+- **Settings** (`/settings`): User profile and application settings
 
-**Use GitHub Codespaces**
+## 🔧 Available Scripts
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-## What technologies are used for this project?
+## 🔒 Security Notes
 
-This project is built with:
+- Tasks are stored locally in browser localStorage
+- Smart contract integration is simulated for demo purposes
+- Always verify smart contract addresses before mainnet deployment
+- Use environment variables for sensitive configuration
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🤝 Contributing
 
-## How can I deploy this project?
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
-Simply open [Lovable](https://lovable.dev/projects/20ae1939-b85c-4fe7-b014-2b4fea341f96) and click on Share -> Publish.
+## 📄 License
 
-## Can I connect a custom domain to my Lovable project?
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-Yes, you can!
+## 🔗 Links
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [Live Demo](https://lovable.dev/projects/20ae1939-b85c-4fe7-b014-2b4fea341f96)
+- [Lovable Platform](https://lovable.dev)
+- [WalletConnect](https://walletconnect.com/)
+- [shadcn/ui](https://ui.shadcn.com/)

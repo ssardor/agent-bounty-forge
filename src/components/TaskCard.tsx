@@ -10,17 +10,49 @@ interface TaskCardProps {
   conditions: string;
   status: "active" | "completed" | "cancelled";
   onCancel?: (id: string) => void;
+  onComplete?: (id: string) => void;
+  isWritePending?: boolean;
 }
 
-export function TaskCard({ id, description, bounty, conditions, status, onCancel }: TaskCardProps) {
+export function TaskCard({
+  id,
+  description,
+  bounty,
+  conditions,
+  status,
+  onCancel,
+  onComplete,
+  isWritePending = false,
+}: TaskCardProps) {
   const getStatusBadge = () => {
     switch (status) {
       case "active":
-        return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Active</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-primary/10 text-primary border-primary/20"
+          >
+            Active
+          </Badge>
+        );
       case "completed":
-        return <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">Completed</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-500/10 text-green-600 border-green-500/20"
+          >
+            Completed
+          </Badge>
+        );
       case "cancelled":
-        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">Cancelled</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-destructive/10 text-destructive border-destructive/20"
+          >
+            Cancelled
+          </Badge>
+        );
     }
   };
 
@@ -37,7 +69,7 @@ export function TaskCard({ id, description, bounty, conditions, status, onCancel
           </div>
           {getStatusBadge()}
         </div>
-        
+
         <div className="space-y-2">
           <div className="text-sm">
             <span className="font-medium">Completion Conditions:</span>
@@ -45,15 +77,39 @@ export function TaskCard({ id, description, bounty, conditions, status, onCancel
           </div>
         </div>
 
-        {status === "active" && onCancel && (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => onCancel(id)}
-          >
-            <XCircle className="h-4 w-4 mr-2" />
-            Cancel Task
-          </Button>
+        {status === "active" && (onCancel || onComplete) && (
+          <div className="flex gap-2">
+            {onComplete && (
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={() => onComplete(id)}
+                disabled={isWritePending}
+              >
+                {isWritePending ? (
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                )}
+                Mark Complete
+              </Button>
+            )}
+            {onCancel && (
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => onCancel(id)}
+                disabled={isWritePending}
+              >
+                {isWritePending ? (
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
+                Cancel Task
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </Card>

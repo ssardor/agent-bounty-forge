@@ -1,0 +1,82 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "taskId",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelTask",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "taskId",
+          "type": "uint256"
+        }
+      ],
+      "name": "completeTask",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "bountyAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "conditions",
+          "type": "string"
+        }
+      ],
+      "name": "createTask",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "taskId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "taskId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "result",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "agentAddress",
+          "type": "address"
+        }
+      ],
+      "name": "fulfilTask",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}

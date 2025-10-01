@@ -1,17 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
+import { useTaskContract } from "@/hooks/useTaskContract";
+import { useAccount } from "wagmi";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Task {
+  id: string;
   description: string;
   bounty: string;
   conditions: string;
   timestamp: Date;
 }
+
+interface SubmissionResult {
+  success: boolean;
+  title: string;
+  description: string;
+  details?: {
+    taskId?: string;
+    bountyAmount?: string;
+    transactionHash?: string;
+  };
+  error?: string;
+}
+
+const STORAGE_KEY = "agent-task-history";
 
 export default function CreateTask() {
   const [taskDescription, setTaskDescription] = useState("");
@@ -19,11 +43,45 @@ export default function CreateTask() {
   const [conditions, setConditions] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [taskHistory, setTaskHistory] = useState<Task[]>([]);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [submissionResult, setSubmissionResult] =
+    useState<SubmissionResult | null>(null);
   const { toast } = useToast();
+  const { createTask, isWritePending } = useTaskContract();
+  const { isConnected } = useAccount();
+
+  // Load task history from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem(STORAGE_KEY);
+      if (savedHistory) {
+        const parsedHistory = JSON.parse(savedHistory);
+        // Convert timestamp strings back to Date objects
+        const historyWithDates = parsedHistory.map(
+          (task: Omit<Task, "timestamp"> & { timestamp: string }) => ({
+            ...task,
+            timestamp: new Date(task.timestamp),
+          })
+        );
+        setTaskHistory(historyWithDates);
+      }
+    } catch (error) {
+      console.error("Failed to load task history from localStorage:", error);
+    }
+  }, []);
+
+  // Save task history to localStorage whenever it changes
+  const saveTaskHistory = (newHistory: Task[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+    } catch (error) {
+      console.error("Failed to save task history to localStorage:", error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!taskDescription || !bounty || !conditions) {
       toast({
         title: "Missing Information",
@@ -33,119 +91,256 @@ export default function CreateTask() {
       return;
     }
 
+    // Validate bounty is a positive number
+    const bountyNum = parseFloat(bounty);
+    if (isNaN(bountyNum) || bountyNum <= 0) {
+      toast({
+        title: "Invalid Bounty",
+        description: "Please enter a valid positive number for the bounty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if wallet is connected
+    if (!isConnected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to create a task",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate smart contract interaction
-    setTimeout(() => {
+    // Call smart contract to create task
+    try {
+      await createTask(taskDescription, bounty, conditions);
+
+      // Add to local history for UI purposes
       const newTask: Task = {
+        id: Date.now().toString(), // Simple ID generation
         description: taskDescription,
         bounty,
         conditions,
         timestamp: new Date(),
       };
 
-      setTaskHistory([...taskHistory, newTask]);
+      const updatedHistory = [...taskHistory, newTask];
+      setTaskHistory(updatedHistory);
+      saveTaskHistory(updatedHistory);
 
-      toast({
-        title: "Task Created!",
-        description: `Task posted with ${bounty} USDC bounty. Awaiting agent responses...`,
+      // Show success modal
+      setSubmissionResult({
+        success: true,
+        title: "Task Created Successfully!",
+        description: "Your task has been posted to the marketplace",
+        details: {
+          taskId: newTask.id,
+          bountyAmount: bounty,
+        },
       });
+      setShowResultModal(true);
 
       setTaskDescription("");
       setBounty("");
       setConditions("");
+    } catch (error) {
+      console.error("Error creating task:", error);
+
+      // Show error modal
+      setSubmissionResult({
+        success: false,
+        title: "Task Creation Failed",
+        description: "Failed to create task. Please try again.",
+        error: error instanceof Error ? error.message : String(error),
+      });
+      setShowResultModal(true);
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
+  };
+
+  const closeModal = () => {
+    setShowResultModal(false);
+    setSubmissionResult(null);
   };
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
-      {/* Chat History */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {taskHistory.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-muted-foreground">
-              <h2 className="text-2xl font-semibold mb-2">Agent Task Marketplace</h2>
-              <p>Create a task for AI agents to complete</p>
-            </div>
+      {/* Centered Form */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Create New Task</h1>
+            <p className="text-muted-foreground">
+              Post a task for AI agents to complete
+            </p>
           </div>
-        ) : (
-          taskHistory.map((task, index) => (
-            <div key={index} className="space-y-2">
-              <Card className="p-4 bg-chat-bubble-user text-primary-foreground ml-auto max-w-[80%]">
+
+          <Card className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <div>
-                    <span className="text-xs opacity-80">Task:</span>
-                    <p className="font-medium">{task.description}</p>
+                  <label htmlFor="description" className="text-sm font-medium">
+                    Task Description
+                  </label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe the task you want AI agents to complete..."
+                    value={taskDescription}
+                    onChange={(e) => setTaskDescription(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="bounty" className="text-sm font-medium">
+                      Bounty (USDC)
+                    </label>
+                    <Input
+                      id="bounty"
+                      placeholder="0.00"
+                      type="number"
+                      step="0.01"
+                      value={bounty}
+                      onChange={(e) => setBounty(e.target.value)}
+                    />
                   </div>
-                  <div>
-                    <span className="text-xs opacity-80">Bounty:</span>
-                    <p className="font-medium">{task.bounty} USDC</p>
-                  </div>
-                  <div>
-                    <span className="text-xs opacity-80">Conditions:</span>
-                    <p className="font-medium">{task.conditions}</p>
+
+                  <div className="space-y-2">
+                    <label htmlFor="conditions" className="text-sm font-medium">
+                      Conditions
+                    </label>
+                    <Input
+                      id="conditions"
+                      placeholder="Completion criteria"
+                      value={conditions}
+                      onChange={(e) => setConditions(e.target.value)}
+                    />
                   </div>
                 </div>
-              </Card>
-              <Card className="p-4 bg-chat-bubble max-w-[80%]">
-                <p className="text-sm">
-                  ✅ Task created successfully! Smart contract called: <code className="bg-background/50 px-1 rounded">createTask()</code>
-                  <br />
-                  💰 {task.bounty} USDC transferred to escrow
-                  <br />
-                  🤖 Broadcasting to agent network...
-                </p>
-              </Card>
-            </div>
-          ))
-        )}
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting || isWritePending}
+                className="w-full"
+              >
+                {isSubmitting || isWritePending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Task...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Create Task
+                  </>
+                )}
+              </Button>
+            </form>
+          </Card>
+        </div>
       </div>
 
-      {/* Input Area */}
-      <div className="border-t bg-background p-4">
-        <form onSubmit={handleSubmit} className="space-y-3 max-w-4xl mx-auto">
-          <div className="space-y-2">
-            <Input
-              placeholder="Task description..."
-              value={taskDescription}
-              onChange={(e) => setTaskDescription(e.target.value)}
-              className="border-input"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                placeholder="Bounty amount (USDC)"
-                type="number"
-                step="0.01"
-                value={bounty}
-                onChange={(e) => setBounty(e.target.value)}
-                className="border-input"
-              />
-              <Input
-                placeholder="Completion conditions"
-                value={conditions}
-                onChange={(e) => setConditions(e.target.value)}
-                className="border-input"
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="ml-auto"
-              size="icon"
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+      {/* Result Modal */}
+      <Dialog open={showResultModal} onOpenChange={closeModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex justify-center mb-4">
+              {submissionResult?.success ? (
+                <CheckCircle className="h-12 w-12 text-green-500" />
               ) : (
-                <Send className="h-5 w-5" />
+                <XCircle className="h-12 w-12 text-red-500" />
               )}
-            </Button>
-          </div>
-        </form>
-      </div>
+            </div>
+            <DialogTitle className="text-center">
+              {submissionResult?.title}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {submissionResult?.description}
+            </DialogDescription>
+          </DialogHeader>
+
+          {submissionResult && (
+            <div className="space-y-4">
+              {submissionResult.success ? (
+                <div className="space-y-3">
+                  <div className="rounded-lg bg-green-50 dark:bg-green-950/20 p-4">
+                    <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
+                      Task Details
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-green-700 dark:text-green-300">
+                          Task ID:
+                        </span>
+                        <span className="font-mono">
+                          {submissionResult.details?.taskId}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-green-700 dark:text-green-300">
+                          Bounty Amount:
+                        </span>
+                        <span className="font-medium">
+                          {submissionResult.details?.bountyAmount} USDC
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-green-700 dark:text-green-300">
+                          Status:
+                        </span>
+                        <span className="font-medium text-green-600">
+                          Posted to Marketplace
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground text-center">
+                    Your task is now available for AI agents to complete. You'll
+                    be notified when an agent submits a fulfillment.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="rounded-lg bg-red-50 dark:bg-red-950/20 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                      <h4 className="font-medium text-red-800 dark:text-red-200">
+                        Error Details
+                      </h4>
+                    </div>
+                    <p className="text-sm text-red-700 dark:text-red-300">
+                      {submissionResult.error}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950/20 p-4">
+                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                      Possible Causes
+                    </h4>
+                    <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1 list-disc list-inside">
+                      <li>Insufficient USDC balance</li>
+                      <li>Network connection issues</li>
+                      <li>Smart contract error</li>
+                      <li>Gas fee issues</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-center pt-2">
+                <Button onClick={closeModal} className="w-full">
+                  {submissionResult.success ? "Continue" : "Try Again"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "agent-bounty-forge",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "A decentralized marketplace for AI agents with smart contract integration",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -46,6 +47,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.23.22",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
